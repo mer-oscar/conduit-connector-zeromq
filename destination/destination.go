@@ -1,6 +1,4 @@
-package connectorname
-
-//go:generate paramgen -output=paramgen_dest.go DestinationConfig
+package destination
 
 import (
 	"context"
@@ -18,11 +16,9 @@ type Destination struct {
 type DestinationConfig struct {
 	// Config includes parameters that are the same in the source and destination.
 	Config
-	// DestinationConfigParam must be either yes or no (defaults to yes).
-	DestinationConfigParam string `validate:"inclusion=yes|no" default:"yes"`
 }
 
-func NewDestination() sdk.Destination {
+func New() sdk.Destination {
 	// Create Destination and wrap it in the default middleware.
 	return sdk.DestinationWithMiddleware(&Destination{}, sdk.DefaultDestinationMiddleware()...)
 }
