@@ -8,6 +8,8 @@ require (
 	github.com/conduitio/conduit-connector-sdk v0.8.0
 	github.com/golangci/golangci-lint v1.55.2
 	github.com/matryer/is v1.4.1
+	github.com/oklog/ulid/v2 v2.1.0
+	github.com/zeromq/goczmq v4.1.0+incompatible
 )
 
 require (

@@ -5,12 +5,14 @@ import (
 	"fmt"
 
 	sdk "github.com/conduitio/conduit-connector-sdk"
+	"github.com/zeromq/goczmq"
 )
 
 type Destination struct {
 	sdk.UnimplementedDestination
 
-	config DestinationConfig
+	config     DestinationConfig
+	pubChannel *goczmq.Channeler
 }
 
 type DestinationConfig struct {
@@ -31,15 +33,6 @@ func (d *Destination) Parameters() map[string]sdk.Parameter {
 }
 
 func (d *Destination) Configure(ctx context.Context, cfg map[string]string) error {
-	// Configure is the first function to be called in a connector. It provides
-	// the connector with the configuration that can be validated and stored.
-	// In case the configuration is not valid it should return an error.
-	// Testing if your connector can reach the configured data source should be
-	// done in Open, not in Configure.
-	// The SDK will validate the configuration and populate default values
-	// before calling Configure. If you need to do more complex validations you
-	// can do them manually here.
-
 	sdk.Logger(ctx).Info().Msg("Configuring Destination...")
 	err := sdk.Util.ParseConfig(cfg, &d.config)
 	if err != nil {
@@ -49,23 +42,23 @@ func (d *Destination) Configure(ctx context.Context, cfg map[string]string) erro
 }
 
 func (d *Destination) Open(ctx context.Context) error {
-	// Open is called after Configure to signal the plugin it can prepare to
-	// start writing records. If needed, the plugin should open connections in
-	// this function.
+	d.pubChannel = goczmq.NewPubChanneler(d.config.RouterEndpoints)
+
 	return nil
 }
 
 func (d *Destination) Write(ctx context.Context, records []sdk.Record) (int, error) {
-	// Write writes len(r) records from r to the destination right away without
-	// caching. It should return the number of records written from r
-	// (0 <= n <= len(r)) and any error encountered that caused the write to
-	// stop early. Write must return a non-nil error if it returns n < len(r).
-	return 0, nil
+	var written int
+	for _, rec := range records {
+		d.pubChannel.SendChan <- [][]byte{[]byte(d.config.Topic), rec.Bytes()}
+	}
+
+	return written, nil
 }
 
 func (d *Destination) Teardown(ctx context.Context) error {
-	// Teardown signals to the plugin that all records were written and there
-	// will be no more calls to any other function. After Teardown returns, the
-	// plugin should be ready for a graceful shutdown.
+	if d.pubChannel != nil {
+		d.pubChannel.Destroy()
+	}
 	return nil
 }

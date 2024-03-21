@@ -9,9 +9,17 @@ import (
 
 func (Config) Parameters() map[string]sdk.Parameter {
 	return map[string]sdk.Parameter{
-		"global_config_param_name": {
+		"routerEndpoints": {
 			Default:     "",
-			Description: "global_config_param_name is named global_config_param_name and needs to be provided by the user.",
+			Description: "routerEndpoints is a comma separated list of socket endpoints that we wish to deal messages to",
+			Type:        sdk.ParameterTypeString,
+			Validations: []sdk.Validation{
+				sdk.ValidationRequired{},
+			},
+		},
+		"topics": {
+			Default:     "",
+			Description: "topics is a comma separated list of topics to publish to when receiving a record to write",
 			Type:        sdk.ParameterTypeString,
 			Validations: []sdk.Validation{
 				sdk.ValidationRequired{},
