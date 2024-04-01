@@ -13,3 +13,9 @@ func TestTeardown_NoOpen(t *testing.T) {
 	err := con.Teardown(context.Background())
 	is.NoErr(err)
 }
+
+func TestWriteZeroMQ(t *testing.T) {
+	is := is.New(t)
+
+}
+    

@@ -17,7 +17,7 @@ type zeroMQAcceptanceTestDriver struct {
 
 func TestAcceptance(t *testing.T) {
 	go func() {
-		pubChannel := goczmq.NewPubChanneler("tcp://127.0.0.1:5556")
+		pubChannel := goczmq.NewPubChanneler("tcp://127.0.0.1:5555")
 		defer pubChannel.Destroy()
 		ctx := context.Background()
 		for {
@@ -35,7 +35,7 @@ func TestAcceptance(t *testing.T) {
 			Config: sdk.ConfigurableAcceptanceTestDriverConfig{
 				Connector:         Connector,
 				GoleakOptions:     []goleak.Option{goleak.IgnoreCurrent()},
-				SourceConfig:      map[string]string{"portBindings": "tcp://*:5556", "topic": "a"},
+				SourceConfig:      map[string]string{"portBindings": "tcp://*:5555", "topic": "a"},
 				DestinationConfig: map[string]string{"routerEndpoints": "tcp://127.0.0.1:5555", "topic": "a"},
 				GenerateDataType:  sdk.GenerateRawData,
 				Skip: []string{

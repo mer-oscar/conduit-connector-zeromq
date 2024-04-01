@@ -42,11 +42,12 @@ func (s *Source) Configure(ctx context.Context, cfg map[string]string) error {
 
 func (s *Source) Open(ctx context.Context, pos sdk.Position) error {
 	s.routerChannel = goczmq.NewSubChanneler(s.config.PortBindings, s.config.Topic)
+	go s.listen(ctx)
+
 	return nil
 }
 
 func (s *Source) Read(ctx context.Context) (sdk.Record, error) {
-	go s.listen(ctx)
 	select {
 	case rec := <-s.readBuffer:
 		return rec, nil
@@ -68,29 +69,31 @@ func (s *Source) Teardown(ctx context.Context) error {
 }
 
 func (s *Source) listen(ctx context.Context) {
-	select {
-	case msg := <-s.routerChannel.RecvChan:
-		if msg != nil {
-			recFrame := msg[0]
-			fmt.Println(len(msg))
+	for {
+		select {
+		case msg := <-s.routerChannel.RecvChan:
+			if msg != nil {
+				recFrame := msg[0]
+				fmt.Println(len(msg))
 
-			for _, frame := range msg[1:] {
-				recBytes := frame
+				for _, frame := range msg[1:] {
+					recBytes := frame
 
-				recUlid := ulid.Make()
+					recUlid := ulid.Make()
 
-				rec := sdk.Util.Source.NewRecordCreate(
-					sdk.Position(string(recFrame)+"_"+recUlid.String()),
-					sdk.Metadata{
-						"frame": string(recFrame),
-					},
-					nil,
-					sdk.RawData(recBytes))
+					rec := sdk.Util.Source.NewRecordCreate(
+						sdk.Position(string(recFrame)+"_"+recUlid.String()),
+						sdk.Metadata{
+							"frame": string(recFrame),
+						},
+						nil,
+						sdk.RawData(recBytes))
 
-				s.readBuffer <- rec
+					s.readBuffer <- rec
+				}
 			}
+		case <-ctx.Done():
+			return
 		}
-	case <-ctx.Done():
-		return
 	}
 }
